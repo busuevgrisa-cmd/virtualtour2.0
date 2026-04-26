@@ -550,8 +550,16 @@ body {
 @keyframes fade-in { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
 .fade-in { animation: fade-in 0.5s ease forwards; }
 
-/* Mobile responsive */
-@media (max-width: 600px) {
+/* ═══════════════════════════════════════════════
+   MOBILE RESPONSIVE — Phones (≤768px) & Tablets (≤1024px)
+   [MOBILE FIX] All rules below are mobile adaptation additions
+═══════════════════════════════════════════════ */
+
+/* [MOBILE FIX] Minimum font and touch target enforcement */
+@media (max-width: 768px) {
+  body { font-size: 14px; } /* enforce min 14px */
+
+  /* Home + Project screens */
   #screen-home .app-header,
   .home-hero,
   .projects-section,
@@ -559,8 +567,134 @@ body {
   #screen-project .sub-header { padding-left: 16px; padding-right: 16px; }
   .home-hero { padding-top: 32px; }
   .hero-stats { gap: 20px; }
+
+  /* [MOBILE FIX] All buttons min 44px height for Apple HIG touch targets */
+  .btn { min-height: 44px; padding: 10px 16px; font-size: 14px; }
+  .btn-sm { min-height: 40px; }
+
+  /* [MOBILE FIX] Viewer: hide keyboard hints, make panel full-width */
   .viewer-controls-hint { display: none; }
-  #hotspot-panel { width: 100%; }
+  #hotspot-panel {
+    width: 100%;
+    top: auto;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    max-height: 65vh;
+    border-left: none;
+    border-top: 1px solid var(--border2);
+    border-radius: 20px 20px 0 0;
+    transform: translateY(100%);
+  }
+  #hotspot-panel.open { transform: translateY(0); }
+
+  /* [MOBILE FIX] Touch hint for viewer (tap instead of click) */
+  .viewer-controls-hint-mobile {
+    display: flex !important;
+  }
+
+  /* [MOBILE FIX] Scene tour buttons — smaller on mobile */
+  #scene-tour-btns {
+    bottom: 20px;
+    padding: 4px 8px;
+    gap: 4px;
+    max-width: calc(100vw - 32px);
+    overflow-x: auto;
+  }
+  .scene-tour-btn { padding: 6px 10px; font-size: 10px; min-height: 36px; }
+
+  /* [MOBILE FIX] Capture screen — portrait-first layout */
+  /* Bottom bar: stack vertically so nothing overlaps */
+  .capture-bottombar {
+    padding: 16px 16px 32px;
+    /* Keep flex row but ensure spacing prevents overlap */
+    gap: 12px;
+    align-items: center;
+  }
+
+  /* [MOBILE FIX] Record button larger on phone */
+  .capture-record-btn {
+    width: 76px;
+    height: 76px;
+    font-size: 28px;
+    flex-shrink: 0;
+    order: 2; /* center */
+  }
+
+  /* [MOBILE FIX] Coverage indicator — left side, don't shrink too small */
+  .capture-left {
+    min-width: 64px;
+    order: 1;
+  }
+  #coverage-pct { font-size: 20px; }
+
+  /* [MOBILE FIX] Next step button — right side */
+  .capture-next-btn {
+    order: 3;
+    flex: 1;
+    min-height: 44px;
+    font-size: 13px;
+    padding: 8px 12px;
+    text-align: center;
+  }
+
+  /* [MOBILE FIX] Step instruction text — visible above bottom bar */
+  .capture-instruction {
+    bottom: 140px; /* push above bottom bar */
+    padding: 0 16px;
+  }
+  .step-instruction-text { font-size: 14px; }
+  .step-sub-text { font-size: 12px; }
+
+  /* [MOBILE FIX] Top bar — more compact */
+  .capture-topbar { padding: 12px 16px; }
+  .capture-step-label { font-size: 10px; }
+
+  /* [MOBILE FIX] Viewer UI top bar — reduce padding */
+  .viewer-ui { padding: 12px 16px; }
+  .viewer-scene-title { font-size: 12px; }
+  .viewer-scene-sub { font-size: 10px; }
+}
+
+/* [MOBILE FIX] Landscape phone orientation — compress everything */
+@media (max-width: 768px) and (orientation: landscape) {
+  .capture-bottombar {
+    padding: 8px 20px 12px;
+    gap: 16px;
+  }
+  .capture-record-btn { width: 60px; height: 60px; font-size: 22px; }
+  .capture-instruction {
+    bottom: 90px;
+    padding: 0 20px;
+  }
+  .step-instruction-text { font-size: 13px; }
+  .step-sub-text { display: none; } /* hide sub-text in landscape to save space */
+  .capture-topbar { padding: 8px 16px; }
+  /* Top bar step indicator compact */
+  .capture-step-label { display: none; }
+
+  /* [MOBILE FIX] Hotspot panel in landscape: side panel instead of bottom sheet */
+  #hotspot-panel {
+    width: 280px;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: auto;
+    max-height: 100vh;
+    border-top: none;
+    border-left: 1px solid var(--border2);
+    border-radius: 0;
+    transform: translateX(100%);
+  }
+  #hotspot-panel.open { transform: translateX(0); }
+}
+
+/* [MOBILE FIX] Tablet (769–1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .capture-record-btn { width: 72px; height: 72px; }
+  .capture-instruction { bottom: 130px; }
+  #hotspot-panel { width: 280px; }
+  .btn { min-height: 44px; }
 }
 
 /* Divider */
@@ -863,6 +997,11 @@ body {
       <div class="ctrl-hint"><kbd>🖱 Drag</kbd> Вращение</div>
       <div class="ctrl-hint"><kbd>Scroll</kbd> Масштаб</div>
       <div class="ctrl-hint"><kbd>Click</kbd> Объект</div>
+    </div>
+    <!-- [MOBILE FIX] Touch hint shown only on mobile via CSS -->
+    <div class="viewer-controls-hint viewer-controls-hint-mobile" style="display:none">
+      <div class="ctrl-hint">👆 Коснитесь объекта</div>
+      <div class="ctrl-hint">🤌 Щипок — масштаб</div>
     </div>
 
     <!-- Hotspot Info Panel -->
@@ -1894,6 +2033,10 @@ function init3DScene(container) {
 
   setupOrbitControls(renderer.domElement);
   renderer.domElement.addEventListener('click', onViewerClick);
+  // [MOBILE FIX] Add touch-tap support for machine selection on mobile
+  setupViewerTouchTap(renderer.domElement);
+  // [MOBILE FIX] Disable page zoom on double-tap inside the 3D canvas
+  renderer.domElement.style.touchAction = 'pan-x pan-y';
 
   animate3D();
 
@@ -2829,6 +2972,60 @@ function onViewerClick(e) {
   }
 }
 
+// [MOBILE FIX] Touch tap handler for 3D viewer machine selection
+// Converts a touch event into a synthetic event compatible with getMachineAtEvent
+function onViewerTouchTap(touch) {
+  if (!state.renderer) return;
+  // Build a synthetic event with clientX/clientY from the touch
+  const syntheticEvent = { clientX: touch.clientX, clientY: touch.clientY };
+  const machineId = getMachineAtEvent(syntheticEvent);
+  if (machineId) {
+    if (state.selectedMachine && state.selectedMachine !== machineId) {
+      highlightMachine(state.selectedMachine, false);
+    }
+    state.selectedMachine = machineId;
+    highlightMachine(machineId, true);
+    showMachinePanel(machineId);
+  } else {
+    if (state.selectedMachine) {
+      highlightMachine(state.selectedMachine, false);
+      state.selectedMachine = null;
+    }
+    closeHotspotPanel();
+  }
+}
+
+// [MOBILE FIX] Setup touch-tap detection on the viewer canvas
+// Distinguishes taps (no movement) from swipes/drags
+function setupViewerTouchTap(canvas) {
+  let tapStartX = 0, tapStartY = 0, tapStartTime = 0;
+  const TAP_THRESHOLD_PX = 10;  // max movement in px to count as a tap
+  const TAP_THRESHOLD_MS = 300; // max duration in ms to count as a tap
+
+  canvas.addEventListener('touchstart', e => {
+    if (e.touches.length === 1) {
+      tapStartX = e.touches[0].clientX;
+      tapStartY = e.touches[0].clientY;
+      tapStartTime = Date.now();
+    }
+    // Prevent context menu on long press
+    e.preventDefault();
+  }, { passive: false });
+
+  canvas.addEventListener('touchend', e => {
+    if (e.changedTouches.length === 1) {
+      const t = e.changedTouches[0];
+      const dx = Math.abs(t.clientX - tapStartX);
+      const dy = Math.abs(t.clientY - tapStartY);
+      const dt = Date.now() - tapStartTime;
+      // Only treat as a tap if finger barely moved and was quick
+      if (dx < TAP_THRESHOLD_PX && dy < TAP_THRESHOLD_PX && dt < TAP_THRESHOLD_MS) {
+        onViewerTouchTap(t);
+      }
+    }
+  }, { passive: true });
+}
+
 function showHotspotPanel(data) {
   // Legacy compatibility wrapper — now delegates to showMachinePanel
   if (data && data.id) showMachinePanel(data.id);
@@ -2836,6 +3033,18 @@ function showHotspotPanel(data) {
 function closeHotspotPanel() {
   document.getElementById('hotspot-panel').classList.remove('open');
 }
+
+// [MOBILE FIX] Close hotspot panel when user touches outside of it
+document.addEventListener('touchstart', (e) => {
+  const panel = document.getElementById('hotspot-panel');
+  if (panel.classList.contains('open') && !panel.contains(e.target)) {
+    // Only close if the touch is NOT on the 3D canvas (that's handled by the tap logic)
+    const canvas = document.querySelector('#viewer-canvas-container canvas');
+    if (!canvas || !canvas.contains(e.target)) {
+      closeHotspotPanel();
+    }
+  }
+}, { passive: true });
 
 
 // ═══════════════════════════════════════════════════════════
