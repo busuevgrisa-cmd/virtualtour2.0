@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>VirtualTour 2.0 — MVP Demo</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -413,32 +413,44 @@ body {
 
 /* ═══════════════════════════════════════════════
    SCREEN 4: CAPTURE
+   [MOBILE-CAPTURE-FIX] Full rewrite with CSS Grid
 ═══════════════════════════════════════════════ */
 #screen-capture { background: #000; }
 #camera-feed {
   position: absolute; inset: 0; width: 100%; height: 100%;
   object-fit: cover;
 }
+
+/* [MOBILE-CAPTURE-FIX] Overlay uses CSS Grid: topbar / center / bottombar */
 .capture-overlay {
   position: absolute; inset: 0;
-  display: flex; flex-direction: column;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
   pointer-events: none;
+  /* Safe area padding handled per-zone */
 }
 
-/* Top bar */
+/* ── Top bar ──────────────────────────────────────────────── */
 .capture-topbar {
   display: flex; align-items: center; gap: 12px;
   padding: 16px 20px;
+  /* [MOBILE-CAPTURE-FIX] iOS notch: add safe-area top */
+  padding-top: calc(16px + env(safe-area-inset-top));
   background: linear-gradient(180deg, rgba(0,0,0,0.85) 0%, transparent 100%);
   pointer-events: all;
+  /* [MOBILE-CAPTURE-FIX] Prevent text overflow on narrow screens */
+  min-width: 0;
 }
-.capture-topbar > * { pointer-events: all; }
+.capture-topbar > * { pointer-events: all; flex-shrink: 0; }
 .capture-step-indicator {
   flex: 1;
+  min-width: 0; /* allow shrinking */
 }
 .capture-step-label {
   font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em;
   color: rgba(255,255,255,0.5); margin-bottom: 6px;
+  /* [MOBILE-CAPTURE-FIX] Prevent label from overflowing */
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .capture-step-progress {
   display: flex; gap: 4px;
@@ -450,13 +462,24 @@ body {
 .step-dot.done { background: var(--teal); }
 .step-dot.active { background: var(--accent); }
 
-/* Center area with frame guide */
-.capture-center { flex: 1; position: relative; display: flex; align-items: center; justify-content: center; }
+/* ── Center area ──────────────────────────────────────────── */
+/* [MOBILE-CAPTURE-FIX] Center is a flex container holding the viewfinder */
+.capture-center {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  min-height: 0; /* important for grid stretch */
+}
 
-/* Frame corners */
+/* ── Frame corners (viewfinder) ─────────────────────────── */
+/* [MOBILE-CAPTURE-FIX] Use aspect-ratio and viewport-relative size */
 .capture-frame {
   position: absolute;
-  width: min(70vw, 400px); height: min(50vh, 300px);
+  width: min(68vw, 380px);
+  aspect-ratio: 4 / 3;
+  max-height: 50vh;
   pointer-events: none;
 }
 .frame-corner {
@@ -483,10 +506,19 @@ body {
 .capture-arrow.circle { animation-name: arrow-rotate; }
 @keyframes arrow-rotate { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
 
-/* Step instruction */
+/* ── Step instruction ────────────────────────────────────── */
+/* [MOBILE-CAPTURE-FIX] Instruction lives INSIDE center, pinned to its bottom */
 .capture-instruction {
-  position: absolute; bottom: 24px; left: 0; right: 0;
-  text-align: center; pointer-events: none;
+  position: absolute;
+  bottom: 12px;
+  left: 0; right: 0;
+  text-align: center;
+  pointer-events: none;
+  padding: 0 20px;
+  /* [MOBILE-CAPTURE-FIX] Semi-transparent backdrop for readability */
+  background: linear-gradient(0deg, rgba(0,0,0,0.55) 0%, transparent 100%);
+  padding-top: 24px;
+  padding-bottom: 12px;
 }
 .step-title-badge {
   display: inline-block;
@@ -499,32 +531,65 @@ body {
   text-shadow: 0 2px 12px rgba(0,0,0,0.8);
   margin-bottom: 4px;
 }
-.step-sub-text { font-size: 12px; color: rgba(255,255,255,0.5); }
+.step-sub-text { font-size: 12px; color: rgba(255,255,255,0.6); }
 
-/* Bottom bar */
+/* ── Bottom bar ──────────────────────────────────────────── */
+/* [MOBILE-CAPTURE-FIX] 3-column equal grid: coverage | record | next */
 .capture-bottombar {
-  padding: 20px 24px 36px;
-  background: linear-gradient(0deg, rgba(0,0,0,0.85) 0%, transparent 100%);
-  display: flex; align-items: center; justify-content: space-between;
-  pointer-events: all; gap: 16px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  /* [MOBILE-CAPTURE-FIX] iOS home indicator safe area */
+  padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  background: linear-gradient(0deg, rgba(0,0,0,0.9) 0%, transparent 100%);
+  pointer-events: all;
 }
+
+/* [MOBILE-CAPTURE-FIX] Coverage — left column, text-left */
+.capture-left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0; /* prevent overflow */
+}
+
+/* [MOBILE-CAPTURE-FIX] Record button — center column, large touch target */
 .capture-record-btn {
-  width: 68px; height: 68px; border-radius: 50%;
+  width: 72px; height: 72px;
+  border-radius: 50%;
   border: 3px solid rgba(255,255,255,0.3);
-  background: var(--danger); cursor: pointer;
+  background: var(--danger);
+  cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  font-size: 24px; transition: all 0.2s;
+  font-size: 24px;
+  transition: transform 0.15s, box-shadow 0.15s;
   box-shadow: 0 0 30px rgba(244,63,94,0.5);
   flex-shrink: 0;
+  /* [MOBILE-CAPTURE-FIX] iOS touch fix */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
-.capture-record-btn:hover { transform: scale(1.05); box-shadow: 0 0 40px rgba(244,63,94,0.7); }
+.capture-record-btn:active { transform: scale(0.95); box-shadow: 0 0 20px rgba(244,63,94,0.4); }
 .capture-record-btn.recording { background: rgba(255,255,255,0.1); }
 .capture-record-btn.recording::before {
   content: ''; width: 22px; height: 22px;
   background: var(--danger); border-radius: 4px;
 }
-.capture-next-btn { flex: 1; }
-.capture-left { min-width: 80px; }
+
+/* [MOBILE-CAPTURE-FIX] Next button — right column, full width of column */
+.capture-next-btn {
+  width: 100%;
+  text-align: center;
+  padding: 10px 12px;
+  font-size: 13px;
+  min-height: 48px;
+  /* [MOBILE-CAPTURE-FIX] iOS touch fix */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
 
 /* Camera off placeholder */
 .camera-placeholder {
@@ -552,12 +617,15 @@ body {
 
 /* ═══════════════════════════════════════════════
    MOBILE RESPONSIVE — Phones (≤768px) & Tablets (≤1024px)
-   [MOBILE FIX] All rules below are mobile adaptation additions
+   [MOBILE-CAPTURE-FIX] All rules below are mobile adaptation
 ═══════════════════════════════════════════════ */
 
-/* [MOBILE FIX] Minimum font and touch target enforcement */
+/* [MOBILE-CAPTURE-FIX] Global: prevent zoom on double-tap, enforce touch targets */
+* { -webkit-tap-highlight-color: transparent; }
+button, [role="button"] { touch-action: manipulation; }
+
 @media (max-width: 768px) {
-  body { font-size: 14px; } /* enforce min 14px */
+  body { font-size: 14px; }
 
   /* Home + Project screens */
   #screen-home .app-header,
@@ -568,18 +636,15 @@ body {
   .home-hero { padding-top: 32px; }
   .hero-stats { gap: 20px; }
 
-  /* [MOBILE FIX] All buttons min 44px height for Apple HIG touch targets */
+  /* [MOBILE-CAPTURE-FIX] All buttons min 44px (Apple HIG) */
   .btn { min-height: 44px; padding: 10px 16px; font-size: 14px; }
   .btn-sm { min-height: 40px; }
 
-  /* [MOBILE FIX] Viewer: hide keyboard hints, make panel full-width */
+  /* [MOBILE-CAPTURE-FIX] Viewer: hide keyboard hints, bottom sheet panel */
   .viewer-controls-hint { display: none; }
   #hotspot-panel {
     width: 100%;
-    top: auto;
-    bottom: 0;
-    right: 0;
-    left: 0;
+    top: auto; bottom: 0; right: 0; left: 0;
     max-height: 65vh;
     border-left: none;
     border-top: 1px solid var(--border2);
@@ -587,112 +652,105 @@ body {
     transform: translateY(100%);
   }
   #hotspot-panel.open { transform: translateY(0); }
+  .viewer-controls-hint-mobile { display: flex !important; }
 
-  /* [MOBILE FIX] Touch hint for viewer (tap instead of click) */
-  .viewer-controls-hint-mobile {
-    display: flex !important;
-  }
-
-  /* [MOBILE FIX] Scene tour buttons — smaller on mobile */
+  /* [MOBILE-CAPTURE-FIX] Scene tour buttons */
   #scene-tour-btns {
-    bottom: 20px;
-    padding: 4px 8px;
-    gap: 4px;
-    max-width: calc(100vw - 32px);
-    overflow-x: auto;
+    bottom: 20px; padding: 4px 8px; gap: 4px;
+    max-width: calc(100vw - 32px); overflow-x: auto;
   }
   .scene-tour-btn { padding: 6px 10px; font-size: 10px; min-height: 36px; }
 
-  /* [MOBILE FIX] Capture screen — portrait-first layout */
-  /* Bottom bar: stack vertically so nothing overlaps */
-  .capture-bottombar {
-    padding: 16px 16px 32px;
-    /* Keep flex row but ensure spacing prevents overlap */
-    gap: 12px;
-    align-items: center;
+  /* [MOBILE-CAPTURE-FIX] Capture top bar — compact */
+  .capture-topbar {
+    padding: 12px 16px;
+    padding-top: calc(12px + env(safe-area-inset-top));
   }
-
-  /* [MOBILE FIX] Record button larger on phone */
-  .capture-record-btn {
-    width: 76px;
-    height: 76px;
-    font-size: 28px;
-    flex-shrink: 0;
-    order: 2; /* center */
-  }
-
-  /* [MOBILE FIX] Coverage indicator — left side, don't shrink too small */
-  .capture-left {
-    min-width: 64px;
-    order: 1;
-  }
-  #coverage-pct { font-size: 20px; }
-
-  /* [MOBILE FIX] Next step button — right side */
-  .capture-next-btn {
-    order: 3;
-    flex: 1;
-    min-height: 44px;
-    font-size: 13px;
-    padding: 8px 12px;
-    text-align: center;
-  }
-
-  /* [MOBILE FIX] Step instruction text — visible above bottom bar */
-  .capture-instruction {
-    bottom: 140px; /* push above bottom bar */
-    padding: 0 16px;
-  }
-  .step-instruction-text { font-size: 14px; }
-  .step-sub-text { font-size: 12px; }
-
-  /* [MOBILE FIX] Top bar — more compact */
-  .capture-topbar { padding: 12px 16px; }
   .capture-step-label { font-size: 10px; }
 
-  /* [MOBILE FIX] Viewer UI top bar — reduce padding */
+  /* [MOBILE-CAPTURE-FIX] Bottom bar — compact padding on phones */
+  .capture-bottombar {
+    padding: 14px 16px;
+    padding-bottom: calc(18px + env(safe-area-inset-bottom));
+    gap: 10px;
+  }
+
+  /* [MOBILE-CAPTURE-FIX] Record button — 76px on phone */
+  .capture-record-btn { width: 76px; height: 76px; font-size: 26px; }
+
+  /* [MOBILE-CAPTURE-FIX] Coverage counter */
+  #coverage-pct { font-size: 20px; }
+
+  /* [MOBILE-CAPTURE-FIX] Next button text — shorten on small screens */
+  /* JS handles button text, but ensure it doesn't overflow */
+  .capture-next-btn { font-size: 12px; padding: 8px 10px; }
+
+  /* [MOBILE-CAPTURE-FIX] Instruction text */
+  .step-instruction-text { font-size: 14px; }
+  .step-sub-text { font-size: 11px; }
+
+  /* [MOBILE-CAPTURE-FIX] Viewfinder slightly smaller on small phones */
+  .capture-frame { width: min(72vw, 360px); }
+
+  /* Viewer UI */
   .viewer-ui { padding: 12px 16px; }
   .viewer-scene-title { font-size: 12px; }
   .viewer-scene-sub { font-size: 10px; }
 }
 
-/* [MOBILE FIX] Landscape phone orientation — compress everything */
-@media (max-width: 768px) and (orientation: landscape) {
-  .capture-bottombar {
-    padding: 8px 20px 12px;
-    gap: 16px;
+/* [MOBILE-CAPTURE-FIX] Very small phones (≤ 390px width) */
+@media (max-width: 390px) {
+  .capture-record-btn { width: 64px; height: 64px; font-size: 22px; }
+  .capture-next-btn { font-size: 11px; padding: 8px 8px; }
+  .capture-frame { width: 75vw; }
+  /* [MOBILE-CAPTURE-FIX] On tiny screens hide step label text to save space */
+  .capture-step-label { display: none; }
+}
+
+/* [MOBILE-CAPTURE-FIX] Landscape phone — compress everything vertically */
+@media (max-width: 900px) and (orientation: landscape) and (max-height: 500px) {
+  /* Top bar — minimal height */
+  .capture-topbar {
+    padding: 6px 16px;
+    padding-top: calc(6px + env(safe-area-inset-top));
   }
-  .capture-record-btn { width: 60px; height: 60px; font-size: 22px; }
-  .capture-instruction {
-    bottom: 90px;
-    padding: 0 20px;
-  }
-  .step-instruction-text { font-size: 13px; }
-  .step-sub-text { display: none; } /* hide sub-text in landscape to save space */
-  .capture-topbar { padding: 8px 16px; }
-  /* Top bar step indicator compact */
   .capture-step-label { display: none; }
 
-  /* [MOBILE FIX] Hotspot panel in landscape: side panel instead of bottom sheet */
+  /* Bottom bar — compressed */
+  .capture-bottombar {
+    padding: 8px 20px;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom));
+    gap: 14px;
+  }
+  .capture-record-btn { width: 56px; height: 56px; font-size: 20px; }
+
+  /* [MOBILE-CAPTURE-FIX] Hide sub-text in landscape to save vertical space */
+  .step-sub-text { display: none; }
+
+  /* Instruction — show only badge + title */
+  .capture-instruction { bottom: 6px; padding: 12px 20px 6px; }
+  .step-instruction-text { font-size: 13px; }
+
+  /* Viewfinder — wider in landscape */
+  .capture-frame { width: min(50vw, 340px); max-height: 60vh; }
+
+  /* [MOBILE-CAPTURE-FIX] Hotspot panel: side panel in landscape */
   #hotspot-panel {
-    width: 280px;
-    top: 0;
-    bottom: 0;
-    right: 0;
-    left: auto;
+    width: 280px; top: 0; bottom: 0; right: 0; left: auto;
     max-height: 100vh;
-    border-top: none;
-    border-left: 1px solid var(--border2);
+    border-top: none; border-left: 1px solid var(--border2);
     border-radius: 0;
     transform: translateX(100%);
   }
   #hotspot-panel.open { transform: translateX(0); }
+
+  /* Scene tour buttons in landscape */
+  #scene-tour-btns { bottom: 12px; }
 }
 
-/* [MOBILE FIX] Tablet (769–1024px) */
+/* [MOBILE-CAPTURE-FIX] Tablet (769–1024px) */
 @media (min-width: 769px) and (max-width: 1024px) {
   .capture-record-btn { width: 72px; height: 72px; }
-  .capture-instruction { bottom: 130px; }
   #hotspot-panel { width: 280px; }
   .btn { min-height: 44px; }
 }
@@ -1819,12 +1877,14 @@ function renderCaptureStep() {
     dots.appendChild(d);
   });
 
+  // [MOBILE-CAPTURE-FIX] Use shorter labels on narrow screens
+  const isMobileNarrow = window.innerWidth <= 480;
   const nextBtn = document.getElementById('capture-next-btn');
   if (state.captureStep === CAPTURE_STEPS.length - 1) {
-    nextBtn.textContent = 'Завершить съёмку ✓';
+    nextBtn.textContent = isMobileNarrow ? 'Готово ✓' : 'Завершить съёмку ✓';
     nextBtn.onclick = finishCapture;
   } else {
-    nextBtn.textContent = 'Следующий шаг →';
+    nextBtn.textContent = isMobileNarrow ? 'Далее →' : 'Следующий шаг →';
     nextBtn.onclick = nextCaptureStep;
   }
 }
